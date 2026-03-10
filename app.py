@@ -1,4 +1,5 @@
 import streamlit as st
+from pathlib import Path
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -30,7 +31,8 @@ REQUIRED_COLS = ["ID","revolutions","humidity","vibration","x1","x2","x3","x4","
 
 @st.cache_data
 def load_bundled_data():
-    return pd.read_csv("elevator_sensor_data.csv")
+    base = Path(__file__).parent
+    return pd.read_csv(base / "elevator_sensor_data.csv")
 
 def load_and_validate(file):
     try:
