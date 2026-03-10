@@ -326,14 +326,12 @@ with tab_vis:
         name="Trend line",
     ))
     fig3.update_layout(**PLOTLY_LAYOUT)
-    fig3.update_layout(
-        title="Revolutions vs Vibration (coloured by Humidity)",
-        coloraxis_colorbar=dict(
-            title="Humidity %",
-            tickfont=dict(color="#ffffff"),
-            titlefont=dict(color="#ffffff"),
-        ),
+    fig3.update_coloraxes(
+        colorbar_title_text="Humidity %",
+        colorbar_tickfont_color="#ffffff",
+        colorbar_title_font_color="#ffffff",
     )
+    fig3.update_layout(title="Revolutions vs Vibration (coloured by Humidity)")
     st.plotly_chart(fig3, use_container_width=True)
     st.divider()
 
