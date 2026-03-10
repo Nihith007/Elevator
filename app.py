@@ -125,10 +125,17 @@ with tab_vis:
     fig1.add_hline(y=float(df.vibration.mean()), line_dash="dash", line_color=AMBER,
                    annotation_text=f"Mean ({df.vibration.mean():.1f})",
                    annotation_font_color=AMBER, annotation_position="bottom right")
-    fig1.update_layout(**PLOTLY_LAYOUT,
-                       title="Vibration Over Time — Elevator Health Indicator",
-                       xaxis_title="Sample ID (time index)", yaxis_title="Vibration (units)",
-                       yaxis=dict(**PLOTLY_LAYOUT["yaxis"], range=[0, 105]))
+    fig1.update_layout(
+    **PLOTLY_LAYOUT,
+    title="Vibration Over Time — Elevator Health Indicator",
+    xaxis_title="Sample ID (time index)",
+    yaxis_title="Vibration (units)"
+    )
+    
+    fig1.update_layout(
+        yaxis={**PLOTLY_LAYOUT["yaxis"], "range":[0,105]}
+    )
+
     st.plotly_chart(fig1, use_container_width=True)
     st.info(f"{len(anomalies):,} of {len(df):,} readings ({len(anomalies)/len(df)*100:.1f}%) exceed threshold {vib_threshold}.")
     st.divider()
