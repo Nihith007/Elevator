@@ -12,48 +12,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ── Force all text white (override Streamlit's grey defaults) ─────────────────
-st.markdown("""
-<style>
-/* Caption / small text */
-.stMarkdown small, [data-testid="stCaptionContainer"], .st-emotion-cache-1629p8f,
-div[data-testid="stCaptionContainer"] p { color: #ffffff !important; }
-
-/* Metric delta (up/down value) */
-[data-testid="stMetricDelta"] { color: #ffffff !important; }
-[data-testid="stMetricDelta"] svg { fill: #ffffff !important; }
-
-/* Dataframe text */
-.stDataFrame { color: #ffffff; }
-
-/* st.write / paragraph text */
-[data-testid="stMarkdownContainer"] p { color: #ffffff !important; }
-
-/* Sidebar text */
-[data-testid="stSidebar"] p,
-[data-testid="stSidebar"] label,
-[data-testid="stSidebar"] span { color: #ffffff !important; }
-
-/* Tab text */
-[data-baseweb="tab"] p, [data-baseweb="tab"] span { color: #ffffff !important; }
-
-/* selectbox / slider labels */
-.stSlider label, .stSelectbox label, .stFileUploader label { color: #ffffff !important; }
-
-/* Slider value text */
-.stSlider [data-testid="stTickBarMin"],
-.stSlider [data-testid="stTickBarMax"] { color: #ffffff !important; }
-
-/* Info / warning / error box text */
-[data-testid="stAlert"] p { color: #ffffff !important; }
-
-/* Download button */
-.stDownloadButton button { color: #ffffff !important; }
-</style>
-""", unsafe_allow_html=True)
-
-
-
 # ── Colour palette ────────────────────────────────────────────────────────────
 ORANGE = "#f97316"
 AMBER  = "#f59e0b"
@@ -61,24 +19,39 @@ BLUE   = "#3b82f6"
 GREEN  = "#22c55e"
 RED    = "#ef4444"
 PURPLE = "#a78bfa"
+TEXT   = "#0d0f14"
 
+# Plotly chart theme — dark panels, white text inside charts
 PLOTLY_LAYOUT = dict(
-    paper_bgcolor="#1a1e2a",
-    plot_bgcolor="#13161e",
-    font_color="#ffffff",
-    font_family="sans-serif",
+    paper_bgcolor="#1e2230",
+    plot_bgcolor="#161928",
+    font=dict(color="#ffffff", family="sans-serif"),
     margin=dict(l=48, r=24, t=56, b=48),
-    xaxis=dict(gridcolor="#2a2e3d", linecolor="#2a2e3d",
-               tickfont=dict(color="#ffffff"), title_font=dict(color="#ffffff")),
-    yaxis=dict(gridcolor="#2a2e3d", linecolor="#2a2e3d",
-               tickfont=dict(color="#ffffff"), title_font=dict(color="#ffffff")),
+    xaxis=dict(
+        gridcolor="#2a2e3d",
+        linecolor="#2a2e3d",
+        tickfont=dict(color="#ffffff"),
+        title_font=dict(color="#ffffff"),
+    ),
+    yaxis=dict(
+        gridcolor="#2a2e3d",
+        linecolor="#2a2e3d",
+        tickfont=dict(color="#ffffff"),
+        title_font=dict(color="#ffffff"),
+    ),
     title_font=dict(color="#ffffff", size=15),
-    legend=dict(bgcolor="#1a1e2a", bordercolor="#2a2e3d",
-                font=dict(color="#ffffff")),
+    legend=dict(
+        bgcolor="#1e2230",
+        bordercolor="#2a2e3d",
+        font=dict(color="#ffffff"),
+    ),
 )
 
-REQUIRED_COLS = ["ID", "revolutions", "humidity", "vibration",
-                 "x1", "x2", "x3", "x4", "x5"]
+REQUIRED_COLS = [
+    "ID", "revolutions", "humidity", "vibration",
+    "x1", "x2", "x3", "x4", "x5",
+]
+
 
 # ── Sample data generator ─────────────────────────────────────────────────────
 @st.cache_data
@@ -92,7 +65,7 @@ def generate_sample_data(n: int = 1000, seed: int = 42) -> pd.DataFrame:
     humidity = np.clip(
         60 + np.sin(t * np.pi * 2) * 15 + rng.normal(0, 5, n), 35, 85
     ).round(1)
-    anomaly  = np.where(rng.random(n) > 0.95, rng.uniform(15, 35, n), 0)
+    anomaly = np.where(rng.random(n) > 0.95, rng.uniform(15, 35, n), 0)
     vibration = np.clip(
         20 + revolutions * 0.15 + (humidity - 50) * 0.08
         + rng.normal(0, 4, n) + anomaly, 5, None
@@ -128,13 +101,10 @@ def load_and_validate(file):
 
     missing = [c for c in REQUIRED_COLS if c not in df.columns]
     if missing:
-        joined_missing  = ", ".join(missing)
-        joined_have     = "`, `".join(df.columns.tolist())
-        joined_required = "`, `".join(REQUIRED_COLS)
         return None, (
-            f"Missing required columns: **{joined_missing}**\n\n"
-            f"Your file has: `{joined_have}`\n\n"
-            f"Required columns: `{joined_required}`"
+            f"Missing required columns: {', '.join(missing)}\n\n"
+            f"Your file has: {', '.join(df.columns.tolist())}\n\n"
+            f"Required: {', '.join(REQUIRED_COLS)}"
         )
 
     for col in REQUIRED_COLS[1:]:
@@ -155,7 +125,7 @@ with st.sidebar:
     uploaded_file = st.file_uploader(
         "Upload your dataset (.csv or .xlsx)",
         type=["csv", "xlsx"],
-        help="Must contain columns: ID, revolutions, humidity, vibration, x1–x5",
+        help="Must contain columns: ID, revolutions, humidity, vibration, x1 to x5",
     )
     st.divider()
 
@@ -168,8 +138,8 @@ with st.sidebar:
     hum_range = st.slider("Humidity range (%)", 0, 100, (0, 100))
     st.divider()
 
-    st.markdown("<small style='color:#ffffff'>📡 Data sampled at <b>4 Hz</b> during peak evening hours.</small>", unsafe_allow_html=True)
-    st.markdown("<small style='color:#ffffff'>🎓 CRS: Artificial Intelligence — Mathematics for AI-I</small>", unsafe_allow_html=True)
+    st.write("📡 Data sampled at **4 Hz** during peak evening hours.")
+    st.write("🎓 CRS: Artificial Intelligence — Mathematics for AI-I")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -180,7 +150,7 @@ using_sample = False
 if uploaded_file is not None:
     df_raw, err = load_and_validate(uploaded_file)
     if err:
-        st.error(f"**File error:** {err}")
+        st.error(f"File error: {err}")
         st.info("Falling back to the bundled sample dataset.")
         df_raw       = generate_sample_data()
         using_sample = True
@@ -202,18 +172,23 @@ numeric_cols = ["revolutions", "humidity", "vibration",
 # HEADER
 # ─────────────────────────────────────────────────────────────────────────────
 st.title("🏢 TechLift Solutions")
+
 src_label = (
-    "📄 Using uploaded data" if not using_sample
-    else "🔬 Using bundled sample — upload your CSV in the sidebar"
+    "Using uploaded data" if not using_sample
+    else "Using bundled sample — upload your CSV in the sidebar"
 )
-st.markdown(f"<small style='color:#ffffff'>Smart Elevator Movement Visualization &nbsp;|&nbsp; Predictive Maintenance Dashboard &nbsp;|&nbsp; <b>{len(df):,}</b> samples &nbsp;|&nbsp; {src_label}</small>", unsafe_allow_html=True)
+st.write(
+    f"Smart Elevator Movement Visualization  |  "
+    f"Predictive Maintenance Dashboard  |  "
+    f"**{len(df):,}** samples  |  {src_label}"
+)
 st.divider()
 
 if using_sample:
     st.info(
-        "**No file uploaded yet.** The app is showing the bundled sample dataset. "
-        "Upload your own CSV/XLSX in the sidebar, or download the sample below "
-        "to see the exact required format.",
+        "No file uploaded yet. The app is showing the bundled sample dataset. "
+        "Upload your own CSV or XLSX in the sidebar, or download the sample "
+        "below to see the exact required format.",
         icon="ℹ️",
     )
     st.download_button(
@@ -228,11 +203,11 @@ if using_sample:
 # KPI METRICS
 # ─────────────────────────────────────────────────────────────────────────────
 c1, c2, c3, c4, c5 = st.columns(5)
-c1.metric("Avg Vibration",   f"{df.vibration.mean():.1f}",   f"σ {df.vibration.std():.1f}")
-c2.metric("Avg Revolutions", f"{df.revolutions.mean():.1f}", f"σ {df.revolutions.std():.1f}")
-c3.metric("Avg Humidity",    f"{df.humidity.mean():.1f} %",  f"σ {df.humidity.std():.1f}")
+c1.metric("Avg Vibration",   f"{df.vibration.mean():.1f}",   f"std {df.vibration.std():.1f}")
+c2.metric("Avg Revolutions", f"{df.revolutions.mean():.1f}", f"std {df.revolutions.std():.1f}")
+c3.metric("Avg Humidity",    f"{df.humidity.mean():.1f} %",  f"std {df.humidity.std():.1f}")
 c4.metric("Peak Vibration",  f"{df.vibration.max():.1f}",    f"min {df.vibration.min():.1f}")
-c5.metric("⚠️ Anomalies",    str(len(anomalies)),            f"{len(anomalies)/len(df)*100:.1f}%")
+c5.metric("Anomalies",       str(len(anomalies)),            f"{len(anomalies)/len(df)*100:.1f}%")
 
 st.divider()
 
@@ -253,9 +228,9 @@ tab_vis, tab_insights, tab_data, tab_eda = st.tabs([
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_vis:
 
-    # ── Chart 1: Vibration Time Series ───────────────────────────────────────
+    # Chart 1 — Vibration Time Series
     st.subheader("1 · Vibration Time Series")
-    st.markdown("<small style='color:#ffffff'>Track vibration changes over time and detect anomalous spikes.</small>", unsafe_allow_html=True)
+    st.write("Track vibration changes over time and detect anomalous spikes.")
 
     fig1 = go.Figure()
     fig1.add_trace(go.Scatter(
@@ -270,7 +245,7 @@ with tab_vis:
         x=anomalies.ID,
         y=anomalies.vibration,
         mode="markers",
-        name=f"Anomaly ≥ {vib_threshold}",
+        name=f"Anomaly >= {vib_threshold}",
         marker=dict(color=RED, size=8, symbol="circle-open",
                     line=dict(width=2)),
     ))
@@ -289,14 +264,14 @@ with tab_vis:
     )
     st.plotly_chart(fig1, use_container_width=True)
     st.info(
-        f"**{len(anomalies)}** readings exceed the alert threshold of "
-        f"**{vib_threshold}**. These spikes warrant immediate inspection."
+        f"{len(anomalies)} readings exceed the alert threshold of "
+        f"{vib_threshold}. These spikes warrant immediate inspection."
     )
     st.divider()
 
-    # ── Chart 2: Histograms ───────────────────────────────────────────────────
+    # Chart 2 — Histograms
     st.subheader("2 · Distribution of Humidity & Revolutions")
-    st.markdown("<small style='color:#ffffff'>Check how sensor values are spread — normal range vs extreme values.</small>", unsafe_allow_html=True)
+    st.write("Check how sensor values are spread — normal range vs extreme values.")
 
     col_a, col_b = st.columns(2)
 
@@ -328,9 +303,9 @@ with tab_vis:
 
     st.divider()
 
-    # ── Chart 3: Scatter Plot ─────────────────────────────────────────────────
+    # Chart 3 — Scatter
     st.subheader("3 · Revolutions vs Vibration")
-    st.markdown("<small style='color:#ffffff'>Identify if higher door cycles lead to higher vibration levels.</small>", unsafe_allow_html=True)
+    st.write("Identify if higher door cycles lead to higher vibration levels.")
 
     fig3 = px.scatter(
         df, x="revolutions", y="vibration", color="humidity",
@@ -362,16 +337,16 @@ with tab_vis:
     st.plotly_chart(fig3, use_container_width=True)
     st.divider()
 
-    # ── Chart 4: Box Plot ─────────────────────────────────────────────────────
-    st.subheader("4 · Box Plot — Sensor Readings x1 – x5")
-    st.markdown("<small style='color:#ffffff'>Detect outliers and abnormal readings across all secondary sensors.</small>", unsafe_allow_html=True)
+    # Chart 4 — Box Plot
+    st.subheader("4 · Box Plot — Sensor Readings x1 to x5")
+    st.write("Detect outliers and abnormal readings across all secondary sensors.")
 
     sensor_info = [
-        ("x1", "x1 Temp",        ORANGE),
-        ("x2", "x2 Motor",       AMBER),
-        ("x3", "x3 Acoustic",    GREEN),
-        ("x4", "x4 Pressure",    BLUE),
-        ("x5", "x5 Acceleration",PURPLE),
+        ("x1", "x1 Temp",         ORANGE),
+        ("x2", "x2 Motor",        AMBER),
+        ("x3", "x3 Acoustic",     GREEN),
+        ("x4", "x4 Pressure",     BLUE),
+        ("x5", "x5 Acceleration", PURPLE),
     ]
     fig4 = go.Figure()
     for col, label, color in sensor_info:
@@ -390,9 +365,9 @@ with tab_vis:
     st.plotly_chart(fig4, use_container_width=True)
     st.divider()
 
-    # ── Chart 5: Correlation Heatmap ──────────────────────────────────────────
+    # Chart 5 — Correlation Heatmap
     st.subheader("5 · Correlation Heatmap")
-    st.markdown("<small style='color:#ffffff'>Find relationships between all variables — e.g. humidity affecting vibration.</small>", unsafe_allow_html=True)
+    st.write("Find relationships between all variables — e.g. humidity affecting vibration.")
 
     corr = df[numeric_cols].corr()
 
@@ -429,15 +404,11 @@ with tab_vis:
     fig5.update_layout(**heatmap_layout)
     st.plotly_chart(fig5, use_container_width=True)
 
-    vib_corr = (
-        corr["vibration"]
-        .drop("vibration")
-        .sort_values(key=abs, ascending=False)
-    )
+    vib_corr    = corr["vibration"].drop("vibration").sort_values(key=abs, ascending=False)
     top_feature = vib_corr.index[0]
     st.success(
-        f"Strongest correlation with **vibration**: "
-        f"**{top_feature}** (r = {vib_corr[top_feature]:.2f})"
+        f"Strongest correlation with vibration: "
+        f"{top_feature} (r = {vib_corr[top_feature]:.2f})"
     )
 
 
@@ -447,85 +418,88 @@ with tab_vis:
 with tab_insights:
 
     st.subheader("Key Insights & Recommendations")
-    st.markdown("<small style='color:#ffffff'>Stage 4: Connect findings to the real-world problem of elevator maintenance.</small>", unsafe_allow_html=True)
+    st.write("Stage 4: Connect findings to the real-world problem of elevator maintenance.")
 
-    r     = np.corrcoef(df.revolutions, df.vibration)[0, 1]
-    r_hum = np.corrcoef(df.humidity,    df.vibration)[0, 1]
+    r           = np.corrcoef(df.revolutions, df.vibration)[0, 1]
+    r_hum       = np.corrcoef(df.humidity,    df.vibration)[0, 1]
     anomaly_pct = len(anomalies) / len(df) * 100
 
     # Insight 1
-    st.error(f"**⚠️ CRITICAL — Insight 1: High Revolutions Drive Vibration (r = {r:.2f})**")
+    st.error(f"CRITICAL — Insight 1: High Revolutions Drive Vibration (r = {r:.2f})")
     st.write(
         "More door movement cycles directly increases vibration, accelerating bearing wear. "
-        "Elevators averaging more than 70 revolutions per sample should be prioritised for maintenance. "
-        "Switching to usage-based scheduling instead of fixed calendar intervals can reduce "
-        "unexpected downtime by up to **40%**."
+        "Elevators averaging more than 70 revolutions per sample should be prioritised. "
+        "Usage-based maintenance scheduling instead of fixed calendar intervals can reduce "
+        "unexpected downtime by up to 40%."
     )
-
     st.divider()
 
     # Insight 2
-    st.warning(f"**🌡️ ENVIRONMENTAL — Insight 2: Elevated Humidity Amplifies Wear (r = {r_hum:.2f})**")
+    st.warning(f"ENVIRONMENTAL — Insight 2: Elevated Humidity Amplifies Wear (r = {r_hum:.2f})")
     st.write(
         "Humidity above 65% correlates with higher vibration levels. Moisture degrades lubricant "
         "viscosity, promotes micro-corrosion, and increases friction between moving parts. "
         "Seasonal dehumidification and more frequent lubrication during humid months can extend "
-        "component lifespan by **15–20%**."
+        "component lifespan by 15 to 20%."
     )
-
     st.divider()
 
     # Insight 3
     st.error(
-        f"**🔴 ANOMALY ALERT — Insight 3: {len(anomalies)} Vibration Spikes Detected "
-        f"({anomaly_pct:.1f}% of samples)**"
+        f"ANOMALY ALERT — Insight 3: {len(anomalies)} Vibration Spikes Detected "
+        f"({anomaly_pct:.1f}% of samples)"
     )
     st.write(
         f"Spikes above the threshold of {vib_threshold} units are early failure signals, "
-        "typically preceding mechanical breakdowns by 2–4 weeks. "
-        "Automated alerting at this level enables same-day technician dispatch, "
-        "preventing up to **90%** of catastrophic failures."
+        "typically preceding mechanical breakdowns by 2 to 4 weeks. "
+        "Automated alerting enables same-day technician dispatch, "
+        "preventing up to 90% of catastrophic failures."
     )
     if len(anomalies) > 0:
-        st.warning(f"⚠️ {len(anomalies)} anomalous samples currently require review.")
-
+        st.warning(f"{len(anomalies)} anomalous samples currently require review.")
     st.divider()
 
     # Insight 4
-    st.info("**📡 MULTI-SENSOR — Insight 4: Sensors x2 (Motor Current) & x3 (Acoustic) as Backup Indicators**")
+    st.info(
+        "MULTI-SENSOR — Insight 4: "
+        "Sensors x2 (Motor Current) and x3 (Acoustic) as Backup Indicators"
+    )
     st.write(
-        "x2 and x3 show strong collinearity with vibration, providing redundant monitoring capability. "
-        "If the primary vibration sensor fails, these proxies maintain monitoring continuity. "
-        "A composite health score combining vibration + x2 + x3 improves prediction accuracy by ~**25%**."
+        "x2 and x3 show strong collinearity with vibration, providing redundant monitoring. "
+        "If the primary vibration sensor fails, these proxies maintain continuity. "
+        "A composite health score combining vibration + x2 + x3 improves prediction accuracy by 25%."
     )
 
     st.divider()
     st.subheader("Business Impact Summary")
 
-    impact_df = pd.DataFrame({
-        "Challenge": [
-            "Long wait times",
-            "Excess energy use",
-            "Unexpected failures",
-            "High maintenance costs",
-            "Safety concerns",
-        ],
-        "Solution": [
-            "Predict maintenance windows before failures cause outages",
-            "Identify high-friction elevators via vibration & motor current",
-            "Threshold alerts + anomaly detection pipeline",
-            "Data-driven, usage-based scheduling",
-            "Proactive intervention before critical failure",
-        ],
-        "Estimated Impact": [
-            "-30% wait time",
-            "-15% energy cost",
-            "-60% emergency repairs",
-            "-25% maintenance budget",
-            "99.9% uptime",
-        ],
-    })
-    st.dataframe(impact_df, use_container_width=True, hide_index=True)
+    st.dataframe(
+        pd.DataFrame({
+            "Challenge": [
+                "Long wait times",
+                "Excess energy use",
+                "Unexpected failures",
+                "High maintenance costs",
+                "Safety concerns",
+            ],
+            "Solution": [
+                "Predict maintenance windows before failures cause outages",
+                "Identify high-friction elevators via vibration and motor current",
+                "Threshold alerts and anomaly detection pipeline",
+                "Data-driven, usage-based scheduling",
+                "Proactive intervention before critical failure",
+            ],
+            "Estimated Impact": [
+                "-30% wait time",
+                "-15% energy cost",
+                "-60% emergency repairs",
+                "-25% maintenance budget",
+                "99.9% uptime",
+            ],
+        }),
+        use_container_width=True,
+        hide_index=True,
+    )
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -536,7 +510,7 @@ with tab_data:
 
     col1, col2 = st.columns([3, 1])
     with col1:
-        search = st.text_input("Filter rows", placeholder="Search any value…")
+        search = st.text_input("Filter rows", placeholder="Search any value...")
     with col2:
         show_anom = st.checkbox("Anomalies only", value=False)
 
@@ -557,12 +531,15 @@ with tab_data:
                 subset=["vibration"],
                 left=vib_threshold,
                 right=9999,
-                color="#ef44441a",
+                color="#ffd5cc",
             ),
         use_container_width=True,
         height=420,
     )
-    st.markdown(f"<small style='color:#ffffff'>Showing {len(display_df):,} of {len(df):,} rows. Rows highlighted in red exceed the vibration threshold ({vib_threshold}).</small>", unsafe_allow_html=True)
+    st.write(
+        f"Showing {len(display_df):,} of {len(df):,} rows. "
+        f"Rows highlighted in red-orange exceed the vibration threshold ({vib_threshold})."
+    )
     st.download_button(
         "⬇️ Download dataset as CSV",
         df.to_csv(index=False).encode(),
@@ -580,26 +557,27 @@ with tab_eda:
     col_l, col_r = st.columns(2)
 
     with col_l:
-        st.markdown("**Dataset Shape**")
-        st.write(f"- Rows: **{df.shape[0]:,}**")
-        st.write(f"- Columns: **{df.shape[1]}**")
-        st.write(f"- Missing values: **{df.isnull().sum().sum()}** ✅")
-        st.write(f"- Duplicate rows: **{df.duplicated().sum()}** ✅")
+        st.write("**Dataset Shape**")
+        st.write(f"- Rows: {df.shape[0]:,}")
+        st.write(f"- Columns: {df.shape[1]}")
+        st.write(f"- Missing values: {df.isnull().sum().sum()} (none) ✅")
+        st.write(f"- Duplicate rows: {df.duplicated().sum()} ✅")
         st.write(
-            f"- Source: **{'Uploaded file' if not using_sample else 'Sample dataset'}**"
+            f"- Source: {'Uploaded file' if not using_sample else 'Sample dataset'}"
         )
 
     with col_r:
-        st.markdown("**Column Data Types**")
+        st.write("**Column Data Types**")
         dtypes_df = df.dtypes.reset_index()
         dtypes_df.columns = ["Column", "Type"]
+        dtypes_df["Type"] = dtypes_df["Type"].astype(str)
         st.dataframe(dtypes_df, use_container_width=True, hide_index=True)
 
-    st.markdown("**Required Columns Check**")
+    st.write("**Required Columns Check**")
     check_cols = st.columns(len(REQUIRED_COLS))
     for i, col in enumerate(REQUIRED_COLS):
         status = "✅" if col in df.columns else "❌"
-        check_cols[i].write(f"{status} `{col}`")
+        check_cols[i].write(f"{status} {col}")
 
     st.divider()
     st.subheader("Descriptive Statistics")
@@ -641,12 +619,14 @@ with tab_eda:
         showlegend=False,
     )
     st.plotly_chart(fig_bar, use_container_width=True)
-
-    st.markdown("<small style='color:#ffffff'>Orange bars = positive correlation with vibration. Blue bars = negative correlation.</small>", unsafe_allow_html=True)
+    st.write("Orange bars = positive correlation with vibration. Blue bars = negative correlation.")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FOOTER
 # ─────────────────────────────────────────────────────────────────────────────
 st.divider()
-st.markdown("<small style='color:#ffffff'>TechLift Solutions · Smart Building Data Analytics · CRS Artificial Intelligence — Mathematics for AI-I</small>", unsafe_allow_html=True)
+st.write(
+    "TechLift Solutions  |  Smart Building Data Analytics  |  "
+    "CRS Artificial Intelligence — Mathematics for AI-I"
+)
